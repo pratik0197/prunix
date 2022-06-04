@@ -4,7 +4,8 @@
 #include<string.h>
 int main(int argc, char*argv[]){
     char command[198];
-    scanf("%s",command);
+    fgets(command, sizeof command, stdin);
+    command[strcspn(command, "\n")] = 0;
     while(strcmp(command,"quit") != 0){
         char* delim = ";/ "; 
         char* token = strtok(command,delim); // tokenizes the string based on delimiters
