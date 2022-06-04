@@ -9,48 +9,42 @@
 void read_command(char* command);
 char* err_msg(int status);
 void print_prompt();
-
+void execute_individual_command(char* command);
 int main(int argc, char*argv[]){
 
-    char command[198];
+    char command[2000];
     print_prompt();
     read_command(command);
-
+    
     while(strcmp(command,"quit") != 0){
-        
-        char* delim = " "; 
-        char* token = strtok(command,delim); 
-        char* list_of_arguments[40];
+        char delim[2] = ";";
+        char* list_of_commands[200];
+        char* token = strtok(command,delim);
+        int wpid,status;
         int i = 0;
-
-
         while(token != NULL){
-            list_of_arguments[i++] = token;
+            list_of_commands[i++] = token;
             token = strtok(NULL,delim);
         }
-
-        list_of_arguments[i] = 0;
-        
-        int status;
-        
-        if(fork() == 0){
-            execvp(list_of_arguments[0], list_of_arguments);
-            exit(errno);
+        for(int j=0;j<i;j++){
+            execute_individual_command(list_of_commands[j]);
         }
-        else{
-            wait(&status);
-            printf("%s",err_msg(status));
-        }
+        while((wpid = wait(&status)) > 0);
+        
         print_prompt();
         read_command(command);
     }
 }
 
 // TODO: Put in separate header and library files.
-int NO_COMMAND_FOUND_EXCEPTION = 512;
-void read_command(char *command){
+// Constants
+const int NO_COMMAND_FOUND_EXCEPTION = 512;
 
-    fgets(command, sizeof command, stdin);
+
+
+void read_command(char *command){
+    fflush(stdin);
+    fgets(command, 2000, stdin);
     command[strcspn(command, "\n")] = 0;
 }
 
@@ -64,4 +58,26 @@ char* err_msg(int status){
 
 void print_prompt(){
     printf("prunix> ");
+
+}
+
+void execute_individual_command(char* command){
+
+    char delim[2] = " "; 
+    char* list_of_arguments[200];
+    int i = 0;
+    char* token = strtok(command,delim); 
+
+    while(token != NULL){
+        list_of_arguments[i++] = token;
+
+        token = strtok(NULL,delim);
+    }
+
+    list_of_arguments[i] = 0;
+    int status;
+    if(fork() == 0){
+        execvp(list_of_arguments[0], list_of_arguments);
+        exit(errno);
+    }
 }
